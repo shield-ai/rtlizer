@@ -4,18 +4,18 @@
 #
 
 CC = gcc
-CFLAGS = -Wall -O3 `pkg-config --cflags librtlsdr gtk+-3.0`
-LIBS = -lm `pkg-config --libs librtlsdr gtk+-3.0`
+CFLAGS = -Wall -O3 `pkg-config --cflags librtlsdr`
+LIBS = -lm `pkg-config --libs librtlsdr`
 
 #INCLUDES = -I./src/
 #LFLAGS = 
 
 # C source files
-SRCS = kiss_fft.c rtlizer.c
+SRCS = kiss_fft.c server.c
 
 OBJS = $(SRCS:.c=.o)
 
-MAIN = rtlizer
+MAIN = rtlizer_server
 
 # generic makefile
 .PHONY: depend clean
