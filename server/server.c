@@ -41,7 +41,7 @@
 
 static uint8_t *buffer;
 static uint32_t dev_index = 0;
-static uint32_t frequency = 98000000;
+static uint32_t frequency = 2437000000; // wifi channel 6
 static uint32_t samp_rate = DEFAULT_SAMPLE_RATE;
 static uint32_t buff_len = 2048;
 static int      ppm_error = 0;
