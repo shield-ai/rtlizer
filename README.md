@@ -1,60 +1,44 @@
-Rtlizer
-=======
-
-Rtlizer is a simple spectrum analyzer application written using rtlsdr,
-kiss_fft and Gtk+. It was originally created as a Beaglebone + rtlsdr demo,
-but it will probably run on anything with rtlsdr and Gtk+ installed,
-including a Raspberry Pi equipped with an Adafruit piTFT display.
-
-<a href="http://www.flickr.com/photos/csete/8474999050/" title="Beaglebone rtlizer"><img src="http://farm9.staticflickr.com/8385/8474999050_4d418b232d.jpg" width="500" height="254" alt="Beaglebone rtlizer"></a>
-
-<a href="https://www.flickr.com/photos/csete/15918779698" title="Rtlizer running on the Raspberry Pi by Alexandru Csete, on Flickr"><img src="https://farm9.staticflickr.com/8572/15918779698_70a4b6bdc0.jpg" width="500" height="238" alt="Rtlizer running on the Raspberry Pi"></a>
-
-You can see a short video demo on YouTube:
-https://www.youtube.com/watch?v=jzmFXreuFR4
-
-Dependencies
+Installation
 ------------
 
-* [rtlsdr](http://sdr.osmocom.org/trac/wiki/rtl-sdr) (requires libusb-1.0)
-* [Gtk+ v3](http://www.gtk.org/)
-* [kiss_fft](http://kissfft.sourceforge.net/) (included)
+SOFTWARE:
+- Plug BeagleBone into computer via miniUSB cable. It has a g_ether gadget that you should be able to ping at 192.168.7.2. It _should_ DHCP-assign your computer an IP of 192.168.7.1, but usually fails to do so, in which case just set it statically.
+- ssh debian@192.168.7.2. Password is `temppwd`.
+- You will need internet. Plug ethernet into network and edit `/etc/network/interfaces` to enable:
+    auto eth0
+    iface eth0 inet dhcp
+- From home directory, git clone https://github.com/shield-ai/rtlizer.git
+- sudo apt-get install socat build-essential cmake libusb-1.0-0-dev
+- git clone git://git.osmocom.org/rtl-sdr.git
+- mkdir -p rtl-sdr/build
+- cd rtl-sdr/build
+- cmake -DDETACH_KERNEL_DRIVER=on -DINSTALL_UDEV_RULES=on ..
+- make
+- sudo make install
+- sudo ldconfig
+- cd ~/rtlizer/server
+- make
+- ln -s rtlizer/start.sh start.sh
+- sudo nano /etc/rc.local
+  - before the `exit 0`, add `/home/debian/start.sh &`
+- Now set ethernet to static to talk to skywalker. Edit `/etc/network/interfaces`:
+    auto eth0
+    iface eth0 inet static
+        address 192.168.0.10
+        netmask 255.255.255.0
 
-Building
---------
-
-The source code is located in the src/ subdirectory. You can imply type "make"
-in this directory and the program should build on any platform where the
-dependencies are met. The build process will generate a single executable
-called rtlizer and you can copy this to a location of your choice.
-
-Instructions for setting rtlizer up on specific targets are available for:
-* Beaglebone running Debian 7 console image
-
+HARDWARE:
+- Physically install BeagleBone on Skywalker quadrotor
+- Provide 5V to barrel jack, or miniUSB port if necessary
+- Connect the ethernet cable that would go to a LIDAR
+- Plug NanoSDR into USB port, MCX-SMA adapter into NanoSDR, and antenna into SMA adapter
 
 Usage
 -----
 
-You can basically run rtlizer as is in any X11 environment. The default window
-size is set to 320x240 but can be overridden using X Window System geometry
-string, e.g.
+On the beaglebone, see `~/rtlizer/start.sh`. If you set `fake_data` to true, it will
+send random numbers, and if `false`, it will send a spectrum analysis.
 
-  rtlizer 640x360+0+0
+On skywalker, run `shockwave_proxy.sh`.
 
-There are also other command line options are available, see rtlizer -h.
-
-You can use the following keys while rtlizer is running:
-
-    LEFT    Increase frequency
-    RIGHT   Decrease frequency
-    UP      Increase sample rate
-    DOWN    Decrease sample rate
-    ENTER   Exit
-
-
-Credits
--------
-
-Rtlizer was written by Alexandru Csete.
-Uses code from rtl_test by Steve Markgraf.
-Includes kiss_fft by Mark Borgerding.
+On the ground station, run `fake_ground_station` or `real_ground_station`, espective of the value of `fake_data` on the beaglebone.
