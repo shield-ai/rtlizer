@@ -14,8 +14,8 @@
 #define SCREEN_FRAC 1.0f        /* fraction of screen height used for FFT */
 #define DYNAMIC_RANGE 70.f      /* -dBFS coreresponding to bottom of screen */
 
-#define MULTICAST_PORT 12345
-#define MULTICAST_GROUP "225.0.0.37"
+#define MULTICAST_PORT 6666
+#define MULTICAST_GROUP "224.255.0.1"
 
 static float    scale;
 static int      yzero = 0;

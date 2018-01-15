@@ -35,8 +35,8 @@
 
 #define DEFAULT_SAMPLE_RATE 2048000
 
-#define MULTICAST_PORT 12345
-#define MULTICAST_GROUP "225.0.0.37"
+#define PORT 5555
+#define IP_ADDRESS "192.168.0.4" // can be multicast IP
 
 
 static uint8_t *buffer;
@@ -220,8 +220,8 @@ int main(int argc, char *argv[])
     /* set up destination address */
     memset(&addr,0,sizeof(addr));
     addr.sin_family=AF_INET;
-    addr.sin_addr.s_addr=inet_addr(MULTICAST_GROUP);
-    addr.sin_port=htons(MULTICAST_PORT);
+    addr.sin_addr.s_addr=inet_addr(IP_ADDRESS);
+    addr.sin_port=htons(PORT);
     
     while(1)
     {
