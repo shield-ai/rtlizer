@@ -1,0 +1,6 @@
+#!/bin/bash
+
+device=enp3s0
+
+echo "Values from Shockwave payload:"
+socat UDP4-RECV:6666,ip-add-membership=224.255.0.1:$device -
