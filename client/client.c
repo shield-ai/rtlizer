@@ -14,9 +14,6 @@
 #define SCREEN_FRAC 1.0f        /* fraction of screen height used for FFT */
 #define DYNAMIC_RANGE 70.f      /* -dBFS coreresponding to bottom of screen */
 
-#define MULTICAST_PORT 6666
-#define MULTICAST_GROUP "224.255.0.1"
-
 static float    scale;
 static int      yzero = 0;
 static int      text_margin = 0;
@@ -31,42 +28,31 @@ static struct sockaddr_in addr;
 static int fd, nbytes;
 static unsigned int addrlen;
 
-static void join_multicast()
+static void tcp_connect(const char* server)
 {
-    struct ip_mreq mreq;
-    u_int yes=1;
-
-    /* create what looks like an ordinary UDP socket */
-    if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+    /* create socket */
+    if ((fd=socket(AF_INET,SOCK_STREAM,0)) < 0) {
         perror("socket");
         exit(1);
     }
 
-    /* allow multiple sockets to use the same PORT number */
-    if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) {
-        perror("Reusing ADDR failed");
-        exit(1);
-    }
-    
     /* set up destination address */
     memset(&addr,0,sizeof(addr));
     addr.sin_family=AF_INET;
-    addr.sin_addr.s_addr=htonl(INADDR_ANY); /* N.B.: differs from sender */
-    addr.sin_port=htons(MULTICAST_PORT);
-    
-    /* bind to receive address */
-    if (bind(fd,(struct sockaddr *) &addr,sizeof(addr)) < 0) {
-        perror("bind");
+    addr.sin_port=htons(8888);
+    if(inet_pton(AF_INET, server, &addr.sin_addr) <= 0) 
+    {
+        perror("\nInvalid address/ Address not supported");
+        printf("Note: Hostnames are not supported, only IP addresses\n");
         exit(1);
     }
     
-    /* use setsockopt() to request that the kernel join a multicast group */
-    mreq.imr_multiaddr.s_addr=inet_addr(MULTICAST_GROUP);
-    mreq.imr_interface.s_addr=htonl(INADDR_ANY);
-    if (setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mreq,sizeof(mreq)) < 0) {
-        perror("setsockopt");
+    if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
+    {
+        perror("Connect failed");
         exit(1);
     }
+    
 }
 
 static gboolean delete_event(GtkWidget * widget, GdkEvent * e, gpointer d)
@@ -165,9 +151,9 @@ static void draw_fft(cairo_t * cr)
 
 gint timeout_cb(gpointer darea)
 {
-    // populate fft data via udp
-    if ((nbytes=recvfrom(fd, log_pwr_fft, fft_size*sizeof(log_pwr_fft[0]), 0, (struct sockaddr *) &addr, &addrlen)) < 0) {
-        perror("recvfrom");
+    // populate fft data via socket
+    if ((nbytes=read(fd, log_pwr_fft, fft_size*sizeof(log_pwr_fft[0])) < 0)) {
+        perror("read");
         exit(1);
     }
 
@@ -210,12 +196,19 @@ int main(int argc, char *argv[])
         case 'h':
         case '?':
         default:
-            printf
-                ("usage: rtlizer [WIDTHxHEIGHT+XOFF+YOFF]\n");
+            printf("usage: rtlizer [WIDTHxHEIGHT+XOFF+YOFF] <HOST>\n");
             exit(EXIT_SUCCESS);
             break;
         }
     }
+    
+    if (optind >= argc)
+    {
+        printf("usage: rtlizer <HOST> [WIDTHxHEIGHT+XOFF+YOFF]\n");
+        exit(EXIT_SUCCESS);
+    }
+    char* server = argv[optind];
+    optind++;
 
     /* default window size if no geometry is specified */
     width = 640;                //gdk_screen_width();
@@ -245,7 +238,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < width; i++)
         log_pwr_fft[i] = -70.f;
         
-    join_multicast();
+    tcp_connect(server);
 
     tid = g_timeout_add(40, timeout_cb, window);
 

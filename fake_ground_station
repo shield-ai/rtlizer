@@ -1,6 +1,11 @@
 #!/bin/bash
 
-device=enp3s0
+if [[ $# -eq 0 ]]; then
+  echo "Usage: fake_ground_station <HOST>"
+  exit 0
+fi
 
-echo "Values from Shockwave payload:"
-socat UDP4-RECV:6666,ip-add-membership=224.255.0.1:$device -
+host=$1
+
+echo "Values from Shockwave payload attached to $host:"
+socat TCP4:$host:8888 -
